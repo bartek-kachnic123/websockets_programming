@@ -13,28 +13,28 @@ bool printable_buf(const void *buf, int len) {
 }
 
 bool printable_buf_alt(const char *buf) {
-    const unsigned char *p = (const unsigned char *)buf; // Rzutowanie wskaźnika na const unsigned char *
+    const unsigned char *p = (const unsigned char *)buf; 
 
-    while (*p != '\0') { // Dopóki nie napotkamy końca łańcucha ('\0')
-        if (*p < 32 || *p > 126) { // Sprawdzenie czy znak jest poza zakresem drukowalnych znaków ASCII
-            return false; // Jeśli znaleziono niedrukowalny znak, zwróć false
+    while (*p != '\0') { 
+        if (*p < 32 || *p > 126) { 
+            return false; 
         }
-        p++; // Przesunięcie wskaźnika na następny znak
+        p++; 
     }
 
-    return true; // Jeśli wszystkie znaki są drukowalne, zwróć true
+    return true; 
 }
 
 void test_printable_buf() {
     char buf1[] = {'H', 'e', 'l', 'l','o'}; // Bufor zawierający tylko drukowalne znaki ASCII
-    char buf2[] = "Hello, \x01World!"; // Bufor zawierający niedrukowalny znak ASCII (znak o wartości 1)
-    if (printable_buf(buf1, sizeof(buf1))) {
+    char buf2[] = {'H', '\x01', 'e', 'l','l', 'o'}; // Bufor zawierający niedrukowalny znak ASCII (znak o wartości 1)
+    if (printable_buf(buf1, 5)) {
         printf("Bufor 1 zawiera tylko drukowalne znaki ASCII.\n");
     } else {
         printf("Bufor 1 zawiera co najmniej jeden niedrukowalny znak ASCII.\n");
     }
 
-    if (printable_buf(buf2, sizeof(buf2))) {
+    if (printable_buf(buf2, 6)) {
         printf("Bufor 2 zawiera tylko drukowalne znaki ASCII.\n");
     } else {
         printf("Bufor 2 zawiera co najmniej jeden niedrukowalny znak ASCII.\n");

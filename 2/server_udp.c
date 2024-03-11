@@ -1,0 +1,81 @@
+// Szkielet serwera TCP/IPv4.
+//
+// Po podmienieniu SOCK_STREAM na SOCK_DGRAM staje się on szkieletem serwera
+// UDP/IPv4 korzystającego z gniazdek działających w trybie połączeniowym.
+
+#define _POSIX_C_SOURCE 200809L
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
+int main(int argc, char *argv[])
+{
+    int lst_sock;   // gniazdko nasłuchujące
+    int clnt_sock;  // gniazdko połączone z bieżącym klientem
+    int rc;         // "rc" to skrót słów "result code"
+    ssize_t cnt;    // wyniki zwracane przez read() i write() są tego typu
+
+
+    if (argc != 2) {
+        fprintf(stderr, "Użycie: %s numer_portu \n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    lst_sock = socket(AF_INET, SOCK_DGRAM,  0);
+    if (lst_sock == -1) {
+        perror("socket");
+        return 1;
+    }
+
+    struct sockaddr_in addr = {
+        .sin_family = AF_INET,
+        .sin_addr = { .s_addr = htonl(INADDR_ANY) },
+        .sin_port = htons(atoi(argv[1]))
+    };
+
+
+
+    rc = bind(lst_sock, (struct sockaddr *) & addr, sizeof(addr));
+    if (rc == -1) {
+        perror("bind");
+        return 1;
+    }
+
+    rc = listen(lst_sock, 10);
+    if (rc == -1) {
+        perror("listen");
+        return 1;
+    }
+
+    bool keep_on_handling_clients = true;
+    while (keep_on_handling_clients) {
+        
+        
+        unsigned char buf[16];
+        struct sockaddr_in cliaddr;
+
+       n = recvfrom(lst_sock,   buf, 16,
+				MSG_WAITALL, ( struct sockaddr *) &cliaddr,
+				sizeof(cliaddr));
+        fwrite(buf, sizeof(char), n, stdout);
+
+        // sendto(sockfd, (const char *)hello, strlen(hello),
+        //     MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+        //         len);
+        // printf("Hello message sent.\n");
+
+    }
+
+    rc = close(lst_sock);
+    if (rc == -1) {
+        perror("close");
+        return 1;
+    }
+
+    return 0;
+}

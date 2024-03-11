@@ -18,6 +18,9 @@ bool printable_buf(const void *buf, int len) {
     const unsigned char *p = (const unsigned char *) buf;
     const unsigned char *end = p + len;
     for (; p != end ; ++p) {
+        if (*p == '\n' || *p == '\r' || *p == '\t') 
+            continue;
+
         if (*p < 32 || *p > 126)
             return false;  
     }
@@ -45,9 +48,10 @@ int main(int argc, char *argv[])
 
     struct sockaddr_in addr = {
         .sin_family = AF_INET,
-        .sin_addr = { .s_addr = htonl(0x7F000001) },   // 127.0.0.1
+        .sin_addr = { .s_addr = inet_addr(argv[1]) },   // 127.0.0.1 default
         .sin_port = htons(atoi(argv[2]))
     };
+
 
     rc = connect(sock, (struct sockaddr *) & addr, sizeof(addr));
     if (rc == -1) {
@@ -63,10 +67,8 @@ int main(int argc, char *argv[])
         perror("read");
         return 1;
     }
-    printf("read %zi bytes\n", cnt);
-
-    if (printable_buf(buf, cnt-2)) {
-        printf("Good\n");
+    if (printable_buf(buf, cnt)) {
+        fwrite(buf, sizeof(char), cnt, stdout);
     }
     rc = close(sock);
     if (rc == -1) {

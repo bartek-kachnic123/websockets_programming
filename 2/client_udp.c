@@ -1,13 +1,10 @@
-// Szkielet klienta TCP/IPv4.
-//
-// Po podmienieniu SOCK_STREAM na SOCK_DGRAM staje się on szkieletem klienta
-// UDP/IPv4 korzystającego z gniazdka działającego w trybie połączeniowym.
+// Szkielet klienta UDP/IPv4 używającego gniazdka bezpołączeniowego.
 
 #define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
+#include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -33,14 +30,14 @@ int main(int argc, char *argv[])
 {
     int sock;
     int rc;         // "rc" to skrót słów "result code"
-    ssize_t cnt;    // wyniki zwracane przez read() i write() są tego typu
+    ssize_t cnt;    // na wyniki zwracane przez recvfrom() i sendto()
 
     if (argc != 3) {
         fprintf(stderr, "Użycie: %s adres_ip numer_portu \n", argv[0]);
         return EXIT_FAILURE;
     }
 
-    sock = socket(AF_INET, SOCK_STREAM, 0);
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock == -1) {
         perror("socket");
         return 1;
@@ -48,7 +45,7 @@ int main(int argc, char *argv[])
 
     struct sockaddr_in addr = {
         .sin_family = AF_INET,
-        .sin_addr = { .s_addr = inet_addr(argv[1]) },   // 127.0.0.1 default
+        .sin_addr = { .s_addr = inet_addr(argv[1]) },   
         .sin_port = htons(atoi(argv[2]))
     };
 
@@ -57,23 +54,24 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    rc = connect(sock, (struct sockaddr *) & addr, sizeof(addr));
-    if (rc == -1) {
-        perror("connect");
+    unsigned char buf[32];
+
+
+    cnt = sendto(sock, buf, 0, 0, (struct sockaddr *) & addr, sizeof(addr));
+    if (cnt == -1) {
+        perror("sendto");
         return 1;
     }
 
-    unsigned char buf[16];
-    
-
-    cnt = read(sock, buf, 16);
+    cnt = recvfrom(sock, buf, 16, 0, NULL, NULL);
     if (cnt == -1) {
-        perror("read");
+        perror("recvfrom");
         return 1;
     }
     if (printable_buf(buf, cnt)) {
         fwrite(buf, sizeof(char), cnt, stdout);
     }
+
     rc = close(sock);
     if (rc == -1) {
         perror("close");

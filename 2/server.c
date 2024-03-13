@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         perror("listen");
         return 1;
     }
-
+    unsigned char buf[16];
     bool keep_on_handling_clients = true;
     while (keep_on_handling_clients) {
 
@@ -58,8 +58,8 @@ int main(int argc, char *argv[])
             perror("accept");
             return 1;
         }
-
-        cnt = write(clnt_sock, "Hello, world!\r\n", strlen("Hello, world!\r\n"));
+        memcpy(buf, "Hello, world!\r\n", 15);
+        cnt = write(clnt_sock, buf, 15);
         if (cnt == -1) {
             perror("write");
             return 1;

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -55,7 +56,13 @@ int main(int argc, char *argv[])
     }
 
     unsigned char buf[32];
+    struct timeval tv;
+    tv.tv_sec = 2;
+    tv.tv_usec = 0;
 
+    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+     
 
     cnt = sendto(sock, buf, 0, 0, (struct sockaddr *) & addr, sizeof(addr));
     if (cnt == -1) {

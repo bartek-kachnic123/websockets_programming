@@ -23,7 +23,7 @@ bool is_letters_eq(unsigned char *p, unsigned char *q) {
     return false;
 }
 
-bool process_str(unsigned char *str_start, unsigned char *str_end) {
+bool is_palindrome(unsigned char *str_start, unsigned char *str_end) {
     unsigned char *p = str_start;
     unsigned char *q = str_end;
 
@@ -38,12 +38,16 @@ bool process_str(unsigned char *str_start, unsigned char *str_end) {
     return true;
 }
 
+bool is_whitespace(unsigned char *p) {
+    return (*p == ' ');
+}
+
 ssize_t process_buf(unsigned char buf[], int len, char response[]) {
     unsigned char *p = buf;
     unsigned char *end = buf + len;
 
-    while( p != end && (*p == ' ' || *p == '\n' || *p == '\r' || *p == '\t')) {
-        ++p;
+    if (is_whitespace(p)) { // white space at start of str
+        return -1;
     }
 
     unsigned char *str_start = p;
@@ -53,8 +57,11 @@ ssize_t process_buf(unsigned char buf[], int len, char response[]) {
 
     for (; p != end; ++p) {
         if (*p == ' ' || p + 1 == end) {
+            if (p + 1 != end && is_whitespace(p + 1)) // contains 2 or more whitespaces between strs
+                return -1;
+
             str_end = p - 1;
-            if (process_str(str_start, str_end)) {
+            if (is_palindrome(str_start, str_end)) {
                 ++palindroms_counter;
             }
             ++words_counter;
@@ -100,7 +107,7 @@ int main(int argc, char *argv[])
     bool keep_on_handling_clients = true;
     while (keep_on_handling_clients) {
 
-        unsigned char buf[MAX_RESPONSE_SIZE];
+        unsigned char buf[MAX_PACKET_SIZE];
         char response[MAX_RESPONSE_SIZE];
 
         struct sockaddr_in clnt_addr;
@@ -113,7 +120,12 @@ int main(int argc, char *argv[])
             perror("recvfrom");
             return 1;
         }
+
         response_len = process_buf(buf, cnt, response);
+        if (response_len == -1) {
+            response_len = 5;
+            memcpy(response, "ERROR", response_len);
+        }
 
         cnt = sendto(sock, response, response_len, 0,
                 (struct sockaddr *) & clnt_addr, clnt_addr_len);

@@ -42,11 +42,20 @@ bool is_whitespace(unsigned char *p) {
     return (*p == ' ');
 }
 
+bool is_control_char(unsigned char *p) {
+    return (*p == '\n' || *p == '\r' || *p == '\t');
+}
+
+
 ssize_t process_buf(unsigned char buf[], int len, char response[]) {
     unsigned char *p = buf;
     unsigned char *end = buf + len;
 
-    if (is_whitespace(p)) { // white space at start of str
+    while( p != end - 1 && is_control_char(end - 1)) { // skip control chars at end of buff
+        --end;
+    }
+
+    if (is_whitespace(p) || is_whitespace(end - 1)) { // white space at start or end of buf
         return -1;
     }
 
@@ -60,7 +69,11 @@ ssize_t process_buf(unsigned char buf[], int len, char response[]) {
             if (p + 1 != end && is_whitespace(p + 1)) // contains 2 or more whitespaces between strs
                 return -1;
 
-            str_end = p - 1;
+            if (p + 1 == end)
+                str_end = p;
+            else
+                str_end = p - 1;
+
             if (is_palindrome(str_start, str_end)) {
                 ++palindroms_counter;
             }
@@ -104,11 +117,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    unsigned char buf[MAX_PACKET_SIZE];
+    char response[MAX_RESPONSE_SIZE];
+    
     bool keep_on_handling_clients = true;
     while (keep_on_handling_clients) {
 
-        unsigned char buf[MAX_PACKET_SIZE];
-        char response[MAX_RESPONSE_SIZE];
 
         struct sockaddr_in clnt_addr;
         socklen_t clnt_addr_len;

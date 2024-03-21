@@ -51,12 +51,14 @@ ssize_t process_buf(unsigned char buf[], int len, char response[]) {
     unsigned char *p = buf;
     unsigned char *end = buf + len;
 
-    while( p != end - 1 && is_control_char(end - 1)) { // skip control chars at end of buff
-        --end;
-    }
+    if (len > 0) {
+        while( p != end - 1 && is_control_char(end - 1)) { // skip control chars at end of buff
+            --end;
+        }
 
-    if (is_whitespace(p) || is_whitespace(end - 1)) { // white space at start or end of buf
-        return -1;
+        if (is_whitespace(p) || is_whitespace(end - 1)) { // white space at start or end of buf
+            return -1;
+        }
     }
 
     unsigned char *str_start = p;
@@ -65,7 +67,12 @@ ssize_t process_buf(unsigned char buf[], int len, char response[]) {
     unsigned int palindroms_counter = 0;
 
     for (; p != end; ++p) {
-        if (*p == ' ' || p + 1 == end) {
+
+        if (!(*p > 64 && *p < 91) && !(*p > 96 && *p < 123) && !is_whitespace(p)) {
+            return -1;
+        }
+
+        if (is_whitespace(p) || p + 1 == end) {
             if (p + 1 != end && is_whitespace(p + 1)) // contains 2 or more whitespaces between strs
                 return -1;
 
